@@ -1,9 +1,13 @@
 import numpy as np
 import pandas as pd
 import csv
+import matplotlib.pyplot as plt
+
 from keras.models import Sequential
 from keras.layers import LSTM
 from keras.layers import Dense
+import keras
+
 
 def split(sequences, n):
 	X, Y = list(), list()
@@ -63,32 +67,54 @@ def main():
 
   database = np.hstack((months, maxTemp, minTemp, humidity, pressure, wind))
 
-  numOfDays = 14
+  numOfDays = 10
 
   X, Y = split(database, numOfDays)
-  
-  n_features = X.shape[2]
+
+  Xtrain = X[:4500, :]
+  Ytrain = Y[:4500, :]
+  Xtest = X[4500:, :]
+  Ytest = Y[4500:, :]
+
+  n_features = Xtrain.shape[2]
 
   # define model
   model = Sequential()
-  model.add(LSTM(100, activation='relu', return_sequences=True, input_shape=(numOfDays, n_features)))
+  model.add(LSTM(100, activation='relu',return_sequences=True, input_shape=(numOfDays, n_features)))
   model.add(LSTM(100, activation='relu'))
+  #model.add(LSTM(50, activation='relu'))
+  #model.add(LSTM(50, activation='relu'))
   model.add(Dense(n_features))
-  model.compile(optimizer='adam', loss='mse')
+  model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
   # fit model
-  model.fit(X, Y, epochs=50, verbose=1)
+  history = model.fit(Xtrain, Ytrain, epochs=20, verbose=1, batch_size = 100)
+
+  model.save("model.h5")
+  
+  #importing model from file
+  #del model
+  model = keras.models.load_model("model.h5")
+
   # demonstrate prediction
-  x_input = np.array([X[15]])
-  print(x_input)
-  x_input = x_input.reshape((1, numOfDays, n_features))
-  y = model.predict(x_input, verbose=1)
+  score = model.evaluate(Xtest, Ytest)
+  print('Test score:', score)
+  #print('Test accuracy:', score[1])
+
+  plt.plot(history.history['val_acc'])
+  plt.title('Model accuracy')
+  plt.ylabel('Accuracy')
+  plt.xlabel('Epoch')
+  plt.legend(['Train', 'Test'], loc='upper left')
+  plt.show()
+
+"""
   y[0][0] = np.interp(y[0][0], (0, 1), (monthsMin, monthsMax))
   y[0][1] = np.interp(y[0][1], (0, 1), (maxTempMin, maxTempMax))
   y[0][2] = np.interp(y[0][2], (0, 1), (minTempMin, minTempMax))
   y[0][3] = np.interp(y[0][3], (0, 1), (humidityMin, humidityMax))
   y[0][4] = np.interp(y[0][4], (0, 1), (pressureMin, pressureMax))
   y[0][5] = np.interp(y[0][5], (0, 1), (windMin, windMax))
-  print(y[0])
+  print(y[0]) """
 
   
 
