@@ -10,7 +10,6 @@ import keras
 
 def split(sequences, n):
 	X, Y = list(), list()
-	print(sequences.shape[0])
 	for i in range(sequences.shape[0]):
 		# find the end of this pattern
 		end = i + n
@@ -44,33 +43,34 @@ def test(Xtest, Ytest, history, x):
 	score = model.evaluate(Xtest, Ytest)
 	print('Test score:', score)
 	
-	# Plot training and validation accuracy
-	plt.plot(history.history['acc'])
-	plt.plot(history.history['val_acc'])
-	axes = plt.gca()
-	axes.set_ylim([0,1])
-	plt.yticks(np.arange(0, 1, 0.1))
-	axes.set_xlim([0,3])
-	plt.xticks(np.arange(0, x, 1))
-	plt.title('Model accuracy')
-	plt.ylabel('Accuracy')
-	plt.xlabel('Epoch')
-	plt.legend(['train_acc', 'val_acc'], loc='upper left')
-	plt.show()
+	if history != 0:
+		# Plot training and validation accuracy
+		plt.plot(history.history['acc'])
+		plt.plot(history.history['val_acc'])
+		axes = plt.gca()
+		axes.set_ylim([0,1])
+		plt.yticks(np.arange(0, 1, 0.1))
+		axes.set_xlim([0,3])
+		plt.xticks(np.arange(0, x, 1))
+		plt.title('Model accuracy')
+		plt.ylabel('Accuracy')
+		plt.xlabel('Epoch')
+		plt.legend(['train_acc', 'val_acc'], loc='upper left')
+		plt.show()
 
-	# Plot training & validation loss values
-	plt.plot(history.history['loss'])
-	plt.plot(history.history['val_loss'])
-	axes = plt.gca()
-	axes.set_ylim([0,0.3])
-	plt.yticks(np.arange(0, 0.3, 0.1))
-	axes.set_xlim([0,3])
-	plt.xticks(np.arange(0, x, 1))
-	plt.title('Model loss')
-	plt.ylabel('Loss')
-	plt.xlabel('Epoch')
-	plt.legend(['train_loss', 'val_loss'], loc='upper left')
-	plt.show()
+		# Plot training & validation loss values
+		plt.plot(history.history['loss'])
+		plt.plot(history.history['val_loss'])
+		axes = plt.gca()
+		axes.set_ylim([0,0.3])
+		plt.yticks(np.arange(0, 0.3, 0.1))
+		axes.set_xlim([0,3])
+		plt.xticks(np.arange(0, x, 1))
+		plt.title('Model loss')
+		plt.ylabel('Loss')
+		plt.xlabel('Epoch')
+		plt.legend(['train_loss', 'val_loss'], loc='upper left')
+		plt.show()
 
 def loadData():
 	data = np.array(list(csv.reader(open("weather.csv", "r"), delimiter=","))).astype("float")
@@ -130,8 +130,11 @@ def main():
 	Xtest = X[5000:, :]
 	Ytest = Y[5000:, :]
 
-	history = train(Xtrain, Ytrain, numOfDays, 20)
-	test(Xtest, Ytest, history, 20)
+	numOfEpochs = 50
+	history = 0
+
+	#history = train(Xtrain, Ytrain, numOfDays, numOfEpochs)
+	test(Xtest, Ytest, history, numOfEpochs)
 
 if __name__ == "__main__":
     main()
