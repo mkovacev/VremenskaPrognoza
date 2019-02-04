@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 import csv
 import matplotlib.pyplot as plt
 
@@ -26,7 +25,7 @@ def split(sequences, n):
 
 def main():
 
-  data = np.array(list(csv.reader(open("weather.csv", "rb"), delimiter=","))).astype("float")
+  data = np.array(list(csv.reader(open("weather.csv", "r"), delimiter=","))).astype("float")
 
   months = data.T[0]
   monthsMin = months.min()
@@ -71,52 +70,77 @@ def main():
 
   X, Y = split(database, numOfDays)
 
-  Xtrain = X[:4500, :]
-  Ytrain = Y[:4500, :]
-  Xtest = X[4500:, :]
-  Ytest = Y[4500:, :]
+  Xtrain = X[:5000, :]
+  Ytrain = Y[:5000, :]
+  Xtest = X[5000:, :]
+  Ytest = Y[5000:, :]
 
   n_features = Xtrain.shape[2]
-
+  
+  """
   # define model
   model = Sequential()
-  model.add(LSTM(100, activation='relu',return_sequences=True, input_shape=(numOfDays, n_features)))
-  model.add(LSTM(100, activation='relu'))
-  #model.add(LSTM(50, activation='relu'))
-  #model.add(LSTM(50, activation='relu'))
+  model.add(LSTM(80, activation='relu',return_sequences=True, input_shape=(numOfDays, n_features)))
+  model.add(LSTM(40, activation='relu', dropout=0.2, recurrent_dropout=0.2))
   model.add(Dense(n_features))
   model.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
   # fit model
-  history = model.fit(Xtrain, Ytrain, epochs=20, verbose=1, batch_size = 100)
+  history = model.fit(Xtrain, Ytrain, validation_split=0.1, epochs=50, verbose=1, batch_size = 100)
 
   model.save("model.h5")
   
   #importing model from file
   #del model
+  """
   model = keras.models.load_model("model.h5")
-
   # demonstrate prediction
   score = model.evaluate(Xtest, Ytest)
   print('Test score:', score)
-  #print('Test accuracy:', score[1])
-
+  """
+  plt.plot(history.history['acc'])
   plt.plot(history.history['val_acc'])
+  axes = plt.gca()
+  axes.set_ylim([0,1])
+  plt.yticks(np.arange(0, 1, 0.1))
+  axes.set_xlim([0,3])
+  plt.xticks(np.arange(0, 50, 1))
   plt.title('Model accuracy')
   plt.ylabel('Accuracy')
   plt.xlabel('Epoch')
-  plt.legend(['Train', 'Test'], loc='upper left')
+  plt.legend(['train_acc', 'val_acc'], loc='upper left')
   plt.show()
 
-"""
-  y[0][0] = np.interp(y[0][0], (0, 1), (monthsMin, monthsMax))
-  y[0][1] = np.interp(y[0][1], (0, 1), (maxTempMin, maxTempMax))
-  y[0][2] = np.interp(y[0][2], (0, 1), (minTempMin, minTempMax))
-  y[0][3] = np.interp(y[0][3], (0, 1), (humidityMin, humidityMax))
-  y[0][4] = np.interp(y[0][4], (0, 1), (pressureMin, pressureMax))
-  y[0][5] = np.interp(y[0][5], (0, 1), (windMin, windMax))
-  print(y[0]) """
+  # Plot training & validation loss values
+  plt.plot(history.history['loss'])
+  plt.plot(history.history['val_loss'])
+  axes = plt.gca()
+  axes.set_ylim([0,0.3])
+  plt.yticks(np.arange(0, 0.3, 0.1))
+  axes.set_xlim([0,3])
+  plt.xticks(np.arange(0, 50, 1))
+  plt.title('Model loss')
+  plt.ylabel('Loss')
+  plt.xlabel('Epoch')
+  plt.legend(['train_loss', 'val_loss'], loc='upper left')
+  plt.show()
 
-  
+  ypred = model.predict(Xtest)
+  ypred = ypred[:, 1:2]
+  ypred = ypred[:300]
+  ypred = np.interp(ypred, (0, 1), (maxTempMin, maxTempMax))
+  y = Ytest[:, 1:2]
+  y = y[:300]
+  y = np.interp(y, (0, 1), (maxTempMin, maxTempMax))
+  x = list(range(1, 301, 1))
+  print(x)
+  plt.plot(x, y)
+  plt.plot(x, ypred)
+  plt.title('Temperature prediction')
+  plt.ylabel('Temperature')
+  plt.xlabel('Day')
+  plt.legend(['actual', 'predicted'], loc='upper left')
+  plt.show()
+  """
 
 if __name__ == "__main__":
     main()
